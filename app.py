@@ -157,7 +157,7 @@ with st.sidebar:
             st.session_state["messages"] = []
             
     ### git repository url ###
-        https://github.com/skyGom/Document_GPT
+        https://github.com/skyGom/Fullstack_GPT_Document
                 """)
 
 if file:
