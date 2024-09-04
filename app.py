@@ -11,17 +11,18 @@ st.title("DocumentGPT")
 
 with st.sidebar:
     api_key = st.text_input("OpenAI API key를 입력해주세요.", type="password")
-    if api_key:
-        with st.spinner("API 키 확인 중..."):
-            valid_key = dls.is_valid_openai_key(api_key)
+    with st.spinner("API 키 확인 중..."):
+        valid_key = dls.is_valid_openai_key(api_key)
             
-        if valid_key:
+        if api_key and valid_key:
             _llm = dls.get_llm(api_key)
-            file = st.file_uploader(
-                ".txt .pdf 혹은 .docx 유형의 파일을 업로드하세요.", type=["txt", "pdf", "docx"]
-            )
-        else:
+        elif api_key and not valid_key:
             st.warning("API 키가 유효하지 않습니다. 다시 시도해주세요.")
+            
+    file = st.file_uploader(
+        ".txt .pdf 혹은 .docx 유형의 파일을 업로드하세요.", type=["txt", "pdf", "docx"],
+        disabled = not valid_key
+        )
     
     st.write("""
              ### Function.document_llm_streamlit.py ###
@@ -115,46 +116,47 @@ with st.sidebar:
 
         with st.sidebar:
             api_key = st.text_input("OpenAI API key를 입력해주세요.", type="password")
-            if api_key:
-                with st.spinner("API 키 확인 중..."):
-                    valid_key = dls.is_valid_openai_key(api_key)
-                    
-                if valid_key:
+            with st.spinner("API 키 확인 중..."):
+                valid_key = dls.is_valid_openai_key(api_key)
+            
+                if api_key and valid_key:
                     _llm = dls.get_llm(api_key)
-                    file = st.file_uploader(
-                        ".txt .pdf 혹은 .docx 유형의 파일을 업로드하세요.", type=["txt", "pdf", "docx"]
-                    )
-                else:
+                elif api_key and not valid_key:
                     st.warning("API 키가 유효하지 않습니다. 다시 시도해주세요.")
             
-            if file:
-            retriever = dls.embed_file(file)
-            dls.send_message("준비완료! 무엇이든 물어보세요", "ai", save=False)
-            dls.paint_history()
-            message = st.chat_input("당신의 문서에 대해 무엇이든 물어보세요...")
-            if message:
-                dls.send_message(message, "human")
-                chain = (
-                    {
-                        "context": retriever | RunnableLambda(dls.format_docs),
-                        "question": RunnablePassthrough(),
-                    }
-                    | dls.prompt
-                    | _llm
-                )
-                with st.chat_message("ai"):
-                    response = chain.invoke(message)
-        else:
-            st.markdown(
-                '''
-                        환영합니다!
-                        
-                        이 챗봇을 사용하여 AI에게 문서 관련 질문을 해보세요!
-                        
-                        사이드 바에 문서를 업로드하면 시작 할 수 있습니다!
-                        '''
+        file = st.file_uploader(
+            ".txt .pdf 혹은 .docx 유형의 파일을 업로드하세요.", type=["txt", "pdf", "docx"],
+            disabled = not valid_key
             )
-            st.session_state["messages"] = []
+                
+                if file:
+                retriever = dls.embed_file(file)
+                dls.send_message("준비완료! 무엇이든 물어보세요", "ai", save=False)
+                dls.paint_history()
+                message = st.chat_input("당신의 문서에 대해 무엇이든 물어보세요...")
+                if message:
+                    dls.send_message(message, "human")
+                    chain = (
+                        {
+                            "context": retriever | RunnableLambda(dls.format_docs),
+                            "question": RunnablePassthrough(),
+                        }
+                        | dls.prompt
+                        | _llm
+                    )
+                    with st.chat_message("ai"):
+                        response = chain.invoke(message)
+            else:
+                st.markdown(
+                    '''
+                            환영합니다!
+                            
+                            이 챗봇을 사용하여 AI에게 문서 관련 질문을 해보세요!
+                            
+                            사이드 바에 문서를 업로드하면 시작 할 수 있습니다!
+                            '''
+                )
+                st.session_state["messages"] = []
             
     ### git repository url ###
         https://github.com/skyGom/Fullstack_GPT_Document
